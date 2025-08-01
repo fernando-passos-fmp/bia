@@ -1,0 +1,69 @@
+# Multi-stage build para otimizar o tamanho da imagem
+FROM public.ecr.aws/docker/library/node:18-slim as builder
+
+# Instalar dependências do sistema
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Upgrade do npm
+RUN npm install -g npm@10 --loglevel=error
+
+WORKDIR /usr/src/app
+
+# Copiar package.json do projeto raiz e instalar dependências
+COPY package*.json ./
+RUN npm ci --only=production --loglevel=error
+
+# Copiar package.json do client e instalar dependências (incluindo devDependencies para build)
+COPY client/package*.json ./client/
+RUN cd client && npm ci --legacy-peer-deps --loglevel=error
+
+# Copiar código fonte
+COPY . .
+
+# Build do frontend React com Vite
+# Configurar variáveis de ambiente do Vite
+ENV VITE_API_URL=http://localhost:3002
+ENV VITE_DEBUG_MODE=false
+ENV NODE_ENV=production
+
+RUN cd client && npm run build
+
+# Stage de produção
+FROM public.ecr.aws/docker/library/node:18-slim
+
+# Instalar curl para health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Criar usuário não-root para segurança
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+WORKDIR /usr/src/app
+
+# Copiar apenas os arquivos necessários do stage builder
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/client/build ./client/build
+COPY --from=builder /usr/src/app/config ./config
+COPY --from=builder /usr/src/app/api ./api
+COPY --from=builder /usr/src/app/server.js ./
+COPY --from=builder /usr/src/app/index.js ./
+
+# Alterar ownership dos arquivos para o usuário não-root
+RUN chown -R appuser:appuser /usr/src/app
+
+# Mudar para usuário não-root
+USER appuser
+
+# Configurar variáveis de ambiente
+ENV NODE_ENV=production
+ENV PORT=3002
+
+# Expor a porta 3002
+EXPOSE 3002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3002/ || exit 1
+
+# Comando para iniciar a aplicação
+CMD ["npm", "start"]

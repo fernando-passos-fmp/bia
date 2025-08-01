@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:16.1
+    container_name: bia-database
+    environment:
+      POSTGRES_DB: bia
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+    container_name: bia-app-container
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - VITE_API_URL=http://localhost:3002
+      - VITE_DEBUG_MODE=false
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=bia
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - bia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+
+networks:
+  bia-network:
+    driver: bridge
