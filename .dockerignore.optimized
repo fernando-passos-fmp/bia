@@ -1,0 +1,85 @@
+# Dependencies
+node_modules
+client/node_modules
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+client/build
+client/dist
+client/.vite
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Docker
+Dockerfile*
+docker-compose.yml
+compose.yml
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.amazonq
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+tests/
+
+# Scripts
+scripts/
+scripts_evento/
+*.bat
+*.sh
+
+# Database
+database/
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Python virtual environment
+.venv/
+
+# Cache
+.cache/
