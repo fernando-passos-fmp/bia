@@ -8,10 +8,10 @@ set -e
 
 # Configurações padrão
 DEFAULT_REGION="us-east-1"
-DEFAULT_CLUSTER="bia-cluster-alb"
+DEFAULT_CLUSTER="cluster-bia"
 DEFAULT_SERVICE="bia-service"
 DEFAULT_TASK_FAMILY="bia-tf"
-DEFAULT_ECR_REPO="bia-app"
+DEFAULT_ECR_REPO="bia"
 
 # Cores para output
 RED='\033[0;31m'
